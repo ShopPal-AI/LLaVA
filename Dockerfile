@@ -10,9 +10,9 @@ COPY scripts/ /workspace/scripts/
 WORKDIR /workspace
 
 #RUN micromamba activate python_310
-#RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-RUN pip config set global.index-url https://pypi.org/simple
-RUN pip install --upgrade pip 
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+#RUN pip config set global.index-url https://pypi.org/simple
+RUN pip install --upgrade pip setuptools
 RUN pip install -e .
 RUN pip install -e ".[train]"
 RUN pip install flash-attn --no-build-isolation --index-url https://pypi.tuna.tsinghua.edu.cn/simple

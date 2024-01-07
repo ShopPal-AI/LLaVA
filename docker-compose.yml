@@ -11,10 +11,16 @@ services:
     env_file: .env
     ports:
       - "${CONTROLLER_HOST_PORT:-10000}:${CONTROLLER_PORT:-10000}"
+    entrypoint: 
+      - python3
+      - -m
+      - llava.serve.controller
+
     command:
-      - python -m llava.serve.controller
-      - --host 0.0.0.0
-      - --port ${CONTROLLER_PORT:-10000}
+      - --host
+      - 0.0.0.0
+      - --port
+      - ${CONTROLLER_PORT:-10000}
 
   web_server:
     build:
@@ -27,10 +33,15 @@ services:
     env_file: .env
     ports:
       - "${WEB_HOST_PORT:-7860}:${WEB_PORT:-7860}"
+    entrypoint: 
+      - python3
+      - -m
+      - llava.serve.gradio_web_server
     command:
-      - python -m llava.serve.gradio_web_server
-      - --controller http://controller:${CONTROLLER_PORT:-10000}
-      - --model-list-mode reload
+      - --controller
+      - http://controller:${CONTROLLER_PORT:-10000}
+      - --model-list-mode
+      - reload
     depends_on:
       - controller
 
@@ -45,13 +56,21 @@ services:
     env_file: .env
     ports:
       - "${MODEL_SERVER_HOST_PORT:-40000}:${MODEL_SERVER_PORT:-40000}"
+    entrypoint: 
+      - python3
+      - -m
+      - llava.serve.model_worker
     command:
-      - python -m llava.serve.model_worker
-      - --controller http://controller:${CONTROLLER_PORT:-10000}
-      - --host 0.0.0.0
-      - --port ${MODEL_SERVER_PORT:-40000}
-      - --worker http://localhost:${MODEL_SERVER_PORT:-40000}
-      - --model-path ${MODEL_PATH:-}
+      - --controller
+      - http://controller:${CONTROLLER_PORT:-10000}
+      - --host
+      - 0.0.0.0
+      - --port
+      - ${MODEL_SERVER_PORT:-40000}
+      - --worker
+      - http://localhost:${MODEL_SERVER_PORT:-40000}
+      - --model-path
+      - ${MODEL_PATH:-}
     volumes:
       - /data0:/data0
     deploy:
@@ -74,13 +93,27 @@ services:
       tags:
         - ghcr.io/shoppal-ai/llava:dev
     env_file: .env
-    ports:
-      - "${MODEL_SERVER_HOST_PORT:-40000}:${MODEL_SERVER_PORT:-40000}"
+    entrypoint:
+      - python3
+      - -m
+      - llava.serve.cli
     command:
-      - python -m llava.serve.cli
-      - --model-path ${MODEL_PATH:-}
-      - --image-file "https://llava-vl.github.io/static/images/view.jpg"
+      - --model-path
+      - ${MODEL_PATH:-}
+      - --image-file
+      - "https://llava-vl.github.io/static/images/view.jpg"
       - --load-4bit
+    tty: true
+    volumes:
+      - /data0:/data0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+              # count: all # if you want to use all gpus, just set count: all
+              device_ids: ['0'] # if you want to use specific gpus, set device_ids: [1, 2, 3]
 
   train:
     build:
